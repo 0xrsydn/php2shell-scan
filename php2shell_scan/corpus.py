@@ -97,6 +97,13 @@ def case(name: str) -> tuple[str, dict, bytes]:
         return build(name, [part(PROGRESS, b"v", filename="p.txt"), f])
     if name == "progress-after-file":
         return build(name, [f, part(PROGRESS, "late")])
+    if name == "sid-in-body":
+        return build(name, [part(PROGRESS, "p"), part("PHPSESSID", "abc123"), f])
+    if name == "sid-after-file":
+        return build(name, [f, part(PROGRESS, "p"), part("PHPSESSID", "abc123")])
+    if name == "sid-and-dup-progress":
+        return build(name, [part(PROGRESS, "p"), part(PROGRESS, "dup"),
+                            part("PHPSESSID", "abc123"), f])
     if name == "progress-nul-value":
         return build(name, [part(PROGRESS, "a\x00b"), f])
     raise KeyError(name)
@@ -106,7 +113,8 @@ CASES = ["clean", "file", "progress", "progress-array", "progress-separators", "
          "progress-collide", "progress-nested", "progress-empty", "deep-names", "long-boundary",
          "weird-boundary", "no-final-boundary", "epilogue", "dup-content-disposition",
          "filename-star", "nul-filename", "empty-filename", "cte-base64", "nested-file-array",
-         "many-files", "progress-as-file", "progress-after-file", "progress-nul-value"]
+         "many-files", "progress-as-file", "progress-after-file", "progress-nul-value",
+         "sid-in-body", "sid-after-file", "sid-and-dup-progress"]
 
 HEAVY = ["progress-big", "many-parts"]
 
