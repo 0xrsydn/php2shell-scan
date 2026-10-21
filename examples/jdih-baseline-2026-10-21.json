@@ -1,0 +1,413 @@
+{
+ "schema": "php2shell.scan/1",
+ "command": "baseline",
+ "target": "https://jdih.komdigi.go.id",
+ "generated_at": "2026-10-21T06:20:37Z",
+ "result": {
+  "target": "https://jdih.komdigi.go.id",
+  "at": "2026-10-21T06:20:52Z",
+  "rounds": 1,
+  "per_case": 1,
+  "heavy": false,
+  "php_worker_deaths": 0,
+  "by_case": {
+   "clean": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.482
+    ]
+   },
+   "file": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.11
+    ]
+   },
+   "progress": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.116
+    ]
+   },
+   "progress-array": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.059
+    ]
+   },
+   "progress-separators": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.058
+    ]
+   },
+   "progress-dup": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.064
+    ]
+   },
+   "progress-collide": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.058
+    ]
+   },
+   "progress-nested": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.076
+    ]
+   },
+   "progress-empty": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.454
+    ]
+   },
+   "deep-names": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.289
+    ]
+   },
+   "long-boundary": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.307
+    ]
+   },
+   "weird-boundary": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.115
+    ]
+   },
+   "no-final-boundary": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.064
+    ]
+   },
+   "epilogue": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.068
+    ]
+   },
+   "dup-content-disposition": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.072
+    ]
+   },
+   "filename-star": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.075
+    ]
+   },
+   "nul-filename": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.124
+    ]
+   },
+   "empty-filename": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.059
+    ]
+   },
+   "cte-base64": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.058
+    ]
+   },
+   "nested-file-array": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.06
+    ]
+   },
+   "many-files": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.08
+    ]
+   },
+   "progress-as-file": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.06
+    ]
+   },
+   "progress-after-file": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.063
+    ]
+   },
+   "progress-nul-value": {
+    "ok": 0,
+    "client": 1,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 1
+    },
+    "t": [
+     0.059
+    ]
+   },
+   "rand": {
+    "ok": 0,
+    "client": 4,
+    "throttle": 0,
+    "server": 0,
+    "hang": 0,
+    "net": 0,
+    "other": 0,
+    "codes": {
+     "405": 4
+    },
+    "t": [
+     0.057,
+     0.058,
+     0.055,
+     0.235
+    ]
+   }
+  },
+  "totals": {
+   "ok": 0,
+   "client": 28,
+   "throttle": 0,
+   "server": 0,
+   "hang": 0,
+   "net": 0,
+   "other": 0
+  },
+  "requests": 28,
+  "bytes_sent": 25034
+ },
+ "limits": [
+  "Behaves below the app: needs no credentials, CSRF token or route.",
+  "Cannot prove a PHP version. Only php -v / dpkg -l | grep php on the origin can.",
+  "A flat profile on a patched host is expected; a parser fix need not change status codes.",
+  "Worker death (5xx/hang with the static control still 200) is a pre-advisory bug signal only.",
+  "Any exploitability percentage is judgement, not measurement, while the advisory is embargoed."
+ ],
+ "note": "Real baseline captured pre-patch (2026-10-21 ~06:20 UTC). 28 requests, 0 worker deaths, all 405."
+}
