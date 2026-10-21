@@ -1,0 +1,25 @@
+{
+ "schema": "php2shell.scan/1",
+ "command": "probe",
+ "target": "https://jdih.example.go.id",
+ "generated_at": "2026-10-21T06:19:00Z",
+ "result": {
+  "root": { "status": "ok", "code": 200 },
+  "server_headers": { "server": "nginx" },
+  "server_hint": ["nginx front", "x-powered-by stripped"],
+  "php_present": true,
+  "fingerprints": { "livewire": "3.14.9", "login_page": 200 },
+  "php_min_guess": 8.1,
+  "multipart": { "status": "client", "code": 405 },
+  "upload_progress": { "status": "client" },
+  "uploads": { "1mb": 405, "8mb": 405, "32mb": 405 },
+  "verdict": {
+   "verdict": "exposed",
+   "meaning": "PHP parses attacker multipart pre-auth: CVE surface is reachable",
+   "reasons": ["multipart POST parsed by PHP -> 405 (client)",
+               "upload-progress field accepted on the same path"],
+   "exit_code": 1
+  }
+ },
+ "limits": ["Cannot prove a PHP version. Only php -v on the origin can."]
+}

@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "php2shell-scan"
+version = "1.0.0"
+description = "Reachability and change detector for the php2shell PHP RCEs (CVE-2026-109618 / CVE-2026-109619)"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "0xrsydn" }]
+keywords = ["php", "cve", "pentest", "scanner", "php2shell", "multipart", "upload-progress"]
+classifiers = ["Environment :: Console", "Intended Audience :: System Administrators",
+               "Programming Language :: Python :: 3", "Topic :: Security"]
+dependencies = []
+
+[project.scripts]
+php2shell-scan = "php2shell_scan.cli:main"
+
+[tool.setuptools]
+packages = ["php2shell_scan"]
