@@ -8,7 +8,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-UA = "php2shell-scan/1.0 (+https://github.com/0xrsydn/php2shell-scan)"
+UA = "php2shell-scan/1.1 (+https://github.com/0xrsydn/php2shell-scan)"
 
 ALIVE = {"ok", "client", "throttle"}
 FAIL = {"hang", "server"}
