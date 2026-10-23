@@ -5,10 +5,10 @@ import argparse
 import json
 import sys
 
-from . import commands, report
+from . import bulk, commands, report
 from .transport import UA, Budget, Client, url_ok
 
-COMMANDS = ("probe", "baseline", "stress", "burst", "compare", "verdict")
+COMMANDS = ("probe", "baseline", "stress", "burst", "compare", "verdict", "bulk")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -17,7 +17,8 @@ def build_parser() -> argparse.ArgumentParser:
         description="Reachability + change detector for CVE-2026-109618 / CVE-2026-109619 "
                     "(php2shell). Read-only unless --path writes.")
     p.add_argument("cmd", choices=COMMANDS)
-    p.add_argument("target", help="base URL, e.g. https://host/")
+    p.add_argument("target",
+                   help="base URL, e.g. https://host/; for bulk: target-list FILE or - for stdin")
     p.add_argument("baseline", nargs="?", help="baseline JSON file (compare/verdict)")
 
     g = p.add_argument_group("request shaping")
@@ -41,12 +42,27 @@ def build_parser() -> argparse.ArgumentParser:
     g.add_argument("--per-case", type=int, default=1)
     g.add_argument("--case", action="append", help="restrict stress to named case(s)")
     g.add_argument("--heavy", action="store_true", help="add 256KB-part and 1100-part cases")
+    g.add_argument("--quick", action="store_true",
+                   help="probe/bulk: skip 8MB and 32MB upload probes (1MB only)")
     g.add_argument("--rand", type=int, default=6, help="randomised heap-shaping bodies per round")
     g.add_argument("--n", type=int, default=12, help="burst: requests")
     g.add_argument("--conc", type=int, default=4, help="burst: concurrency")
     g.add_argument("--size", type=int, default=2 << 20, help="burst: part size in bytes")
     g.add_argument("--threshold", type=float, default=10.0,
                    help="compare: fail-rate delta in pp that counts as change")
+
+    g = p.add_argument_group("bulk scanning")
+    g.add_argument("--out", metavar="DIR", default=None,
+                   help="write per-host JSON, summary.tsv/json/txt here "
+                        "(default: php2shell-results/scan-<UTC>; '-' disables files)")
+    g.add_argument("--host-timeout", type=float, default=60.0, metavar="SECONDS",
+                   help="hard per-target timeout, 0 disables (default 60)")
+    g.add_argument("--host-delay", type=float, default=1.0, metavar="SECONDS",
+                   help="pause between targets, per worker (default 1)")
+    g.add_argument("--workers", type=int, default=1,
+                   help=f"targets scanned concurrently, 1-{bulk.MAX_WORKERS} (default 1)")
+    g.add_argument("--dry-run", action="store_true",
+                   help="normalize and list targets without sending requests")
 
     g = p.add_argument_group("output")
     g.add_argument("--format", choices=["text", "json", "both"], default="text")
@@ -66,6 +82,8 @@ def _headers(a) -> dict:
 
 
 def _text(doc: dict) -> str:
+    if doc.get("command") == "bulk":
+        return bulk.text_summary(doc)
     res = doc.get("result", {})
     v = res.get("verdict")
     lines = [f"{doc['command']} {doc['target']}  [{doc['generated_at']}]"]
@@ -73,7 +91,8 @@ def _text(doc: dict) -> str:
         lines.append(f"VERDICT: {v['verdict']} — {v['meaning']}")
         for why in v.get("reasons", []):
             lines.append(f"  - {why}")
-    for k in ("server_headers", "server_hint", "fingerprints", "php_min_guess", "multipart",
+    for k in ("quick", "server_headers", "server_hint", "fingerprints", "php_evidence", "php_notes",
+              "php_min_guess", "index_php", "multipart", "multipart_php_evidence",
               "upload_progress", "uploads", "php_worker_deaths", "totals", "requests",
               "bytes_sent", "fail", "codes", "worst_seconds", "n", "conc"):
         if k in res:
@@ -90,6 +109,22 @@ def _text(doc: dict) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     a = build_parser().parse_args(argv)
+    if a.cmd == "bulk":
+        try:
+            doc = bulk.scan(a)
+        except bulk.BulkError as exc:
+            print(f"bulk: {exc}", file=sys.stderr)
+            return 2
+        code = int(doc.get("result", {}).get("exit_code", 2))
+        if a.save:
+            with open(a.save, "w") as f:
+                json.dump(doc, f, indent=1)
+        if a.format in ("json", "both"):
+            print(json.dumps(doc, indent=1))
+        if a.format in ("text", "both") and not a.quiet:
+            print(_text(doc), file=sys.stderr if a.format == "both" else sys.stdout)
+        return code
+
     try:
         url_ok(a.target)
     except ValueError as e:
@@ -101,7 +136,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         if a.cmd == "probe":
-            doc = commands.probe(cl)
+            doc = commands.probe(cl, quick=a.quick)
         elif a.cmd == "baseline":
             doc = commands.baseline(cl, rounds=a.rounds, per_case=a.per_case, heavy=a.heavy,
                                      rand_n=a.rand)
