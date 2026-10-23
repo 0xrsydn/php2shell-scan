@@ -5,8 +5,10 @@ SCHEMA = "php2shell.scan/1"
 
 VERDICTS = {
     "mitigated": "multipart POSTs are rejected at the edge; CVE not reachable over HTTP",
-    "exposed": "PHP parses attacker multipart pre-auth: CVE surface is reachable",
-    "inconclusive": "PHP not confirmed, or nothing answered in a classifiable way",
+    "exposed": "PHP evidence on the multipart response and attacker multipart is not rejected: "
+               "CVE surface is reachable",
+    "inconclusive": "PHP unconfirmed, the multipart response lacked PHP evidence, or nothing answered "
+                    "in a classifiable way",
     "improved": "failure profile improved vs baseline / no worker deaths where baseline had some",
     "changed": "failure profile moved materially vs baseline; inspect flagged cases",
     "unchanged": "profile identical to baseline and no improvement signal",
@@ -19,6 +21,7 @@ EXIT = {"mitigated": 0, "exposed": 1, "inconclusive": 2, "improved": 0, "unchang
 LIMITS = [
     "Behaves below the app: needs no credentials, CSRF token or route.",
     "Cannot prove a PHP version. Only php -v / dpkg -l | grep php on the origin can.",
+    "A 405 does not prove PHP: static servers return 405 for POST too; exposed needs PHP evidence.",
     "A flat profile on a patched host is expected; a parser fix need not change status codes.",
     "Worker death (5xx/hang with the static control still 200) is a pre-advisory bug signal only.",
     "Any exploitability percentage is judgement, not measurement, while the advisory is embargoed.",
@@ -44,19 +47,32 @@ def verdict_doc(verdict: str, reasons: list[str], **extra) -> dict:
 
 
 def surface_verdict(php_present: bool, multipart_r: str, multipart_code: int,
-                    progress_r: str) -> dict:
+                    progress_r: str, multipart_evidence: bool = False) -> dict:
     reasons = []
     if not php_present:
-        return verdict_doc("inconclusive", ["no PHP-fronted response observed"])
+        return verdict_doc("inconclusive",
+                           ["no PHP evidence observed (headers, cookies, or /index.php)"])
     if multipart_code == 403 and multipart_r == "client":
         return verdict_doc("mitigated", [f"multipart POST -> {multipart_code} (edge block)"])
-    if multipart_r in ("ok", "client", "throttle"):
-        reasons.append(f"multipart POST parsed by PHP -> {multipart_code} ({multipart_r})")
+    if multipart_r in ("ok", "client"):
+        if not multipart_evidence:
+            return verdict_doc("inconclusive", [
+                f"multipart POST -> {multipart_code} ({multipart_r})",
+                "no PHP evidence on the multipart response; status alone is not enough",
+                "not counted as exposed",
+            ])
+        reasons.append(f"multipart POST -> {multipart_code} ({multipart_r})")
+        reasons.append("PHP evidence on the multipart response")
         if progress_r in ("ok", "client", "throttle"):
             reasons.append("upload-progress field accepted on the same path")
         else:
             reasons.append("upload-progress field not accepted (check ini on the host)")
         return verdict_doc("exposed", reasons)
+    if multipart_r == "throttle":
+        return verdict_doc("inconclusive", [
+            f"multipart POST -> {multipart_code} ({multipart_r})",
+            "429 is an edge throttle, not a parser signal",
+        ])
     if multipart_r in ("hang", "server"):
         return verdict_doc("inconclusive",
                            [f"multipart POST -> {multipart_r}: PHP may be down, retry"])

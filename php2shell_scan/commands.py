@@ -15,44 +15,105 @@ def now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def probe(cl) -> dict:
+PHP_COOKIE_MARKERS = ("phpsessid", "laravel_session", "ci_session", "wordpress_",
+                      "wp-settings-", "joomla_", "yii_", "symfony", "phpbb3_", "kohana_session")
+
+
+def _php_evidence(r: dict) -> list[str]:
+    """Headers/cookies that only a PHP-backed stack normally emits."""
+    h = {k.lower(): v for k, v in (r.get("h") or {}).items()}
+    evidence = []
+    powered = h.get("x-powered-by", "")
+    if "php" in powered.lower():
+        evidence.append(f"x-powered-by: {powered}")
+    server = h.get("server", "")
+    if "php" in server.lower():
+        evidence.append(f"server: {server}")
+    cookies = h.get("set-cookie", "")
+    for marker in PHP_COOKIE_MARKERS:
+        if marker in cookies.lower():
+            evidence.append(f"cookie: {marker}")
+    location = h.get("location", "")
+    if ".php" in location.lower():
+        evidence.append(f"redirect: {location}")
+    return evidence
+
+
+def _merge_evidence(evidence: list[str], extra: list[str]) -> None:
+    for item in extra:
+        if item not in evidence:
+            evidence.append(item)
+
+
+def probe(cl, *, quick: bool = False) -> dict:
     doc = report.envelope("probe", cl.base, generated_at=now(), result={})
     res = doc["result"]
+    res["quick"] = quick
     r = cl.send("GET", "/")
     res["root"] = {"status": r["r"], "code": r["code"]}
     h = {k.lower(): v for k, v in (r.get("h") or {}).items()}
     res["server_headers"] = {k: h[k] for k in ("server", "x-powered-by", "via") if k in h}
     res["server_hint"] = _server_hint(h)
-    res["php_present"] = r["code"] not in (0,) and not (r["code"] == 404 and len(r["head"] or b"") < 64)
+    res["php_evidence"] = []
+    res["php_notes"] = []
+    _merge_evidence(res["php_evidence"], _php_evidence(r))
 
-    res["fingerprints"] = {}
+    # /index.php is the cheapest direct test that a PHP script executes. A 405 on POST /
+    # does not prove PHP: static nginx returns the same code.
+    idx = cl.send("GET", "/index.php", limit=8192)
+    res["index_php"] = {"status": idx["r"], "code": idx["code"]}
+    _merge_evidence(res["php_evidence"], _php_evidence(idx))
+    if idx["code"] == 200:
+        head = (idx["head"] or b"").lower()
+        if b"<?php" in head or b"<?=" in head:
+            res["php_notes"].append("GET /index.php returned 200 with PHP source; PHP is not executing")
+        else:
+            res["php_evidence"].append("GET /index.php -> 200")
+    elif idx["r"] == "server":
+        res["php_evidence"].append(f"GET /index.php -> {idx['code']} (PHP error)")
+
+    lg = cl.send("GET", "/login")
+    _merge_evidence(res["php_evidence"], _php_evidence(lg))
+    if lg["code"] == 200:
+        res["fingerprints"] = {"login_page": 200}
+    else:
+        res["fingerprints"] = {}
+    res["php_present"] = bool(res["php_evidence"])
+
     if res["php_present"]:
         lw = cl.send("GET", "/vendor/livewire/livewire.min.js", limit=400_000)
+        _merge_evidence(res["php_evidence"], _php_evidence(lw))
         m = re.search(rb'version:"([0-9]+\.[0-9]+\.[0-9]+)"', lw["head"] or b"")
         if m:
             res["fingerprints"]["livewire"] = m.group(1).decode()
-        lg = cl.send("GET", "/login")
-        if lg["code"] == 200:
-            res["fingerprints"]["login_page"] = 200
     res["php_min_guess"] = 8.1 if res["fingerprints"].get("livewire", "").startswith("3.") else None
 
     _, hdr, body = corpus.case("progress")
     mp = cl.send(cl.method, cl.path, body, hdr)
     res["multipart"] = {"status": mp["r"], "code": mp["code"]}
     res["upload_progress"] = {"status": mp["r"]}  # same request carried the field
+    res["multipart_php_evidence"] = _php_evidence(mp)
+    _merge_evidence(res["php_evidence"], res["multipart_php_evidence"])
 
     res["uploads"] = {}
-    for mb in (1, 8, 32):
+    for mb in ((1,) if quick else (1, 8, 32)):
         _, hh, bb = corpus.build("big", [corpus.part("f", b"\0" * (mb << 20), filename="z.bin")])
         rr = cl.send(cl.method, cl.path, bb, hh, timeout=max(cl.timeout, 60))
+        upload_evidence = _php_evidence(rr)
+        _merge_evidence(res["php_evidence"], upload_evidence)
+        _merge_evidence(res["multipart_php_evidence"], upload_evidence)
         res["uploads"][f"{mb}mb"] = rr["code"] if rr["r"] != "hang" else "hang"
         if rr["r"] in FAIL and not cl.control():
             res["uploads"][f"{mb}mb"] = "php_dead"
             break
 
+    res["php_present"] = bool(res["php_evidence"])
     res["verdict"] = report.surface_verdict(
         res["php_present"], res["multipart"]["status"], res["multipart"]["code"],
-        res["upload_progress"]["status"])
+        res["upload_progress"]["status"],
+        multipart_evidence=bool(res["multipart_php_evidence"]))
+    res["requests"] = cl.n
+    res["bytes_sent"] = cl.sent_bytes
     return doc
 
 

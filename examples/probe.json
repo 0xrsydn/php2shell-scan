@@ -7,16 +7,21 @@
   "root": { "status": "ok", "code": 200 },
   "server_headers": { "server": "nginx" },
   "server_hint": ["nginx front", "x-powered-by stripped"],
+  "php_evidence": ["cookie: phpsessid", "GET /index.php -> 200"],
+  "php_notes": [],
   "php_present": true,
+  "index_php": { "status": "ok", "code": 200 },
   "fingerprints": { "livewire": "3.14.9", "login_page": 200 },
   "php_min_guess": 8.1,
   "multipart": { "status": "client", "code": 405 },
+  "multipart_php_evidence": ["cookie: phpsessid"],
   "upload_progress": { "status": "client" },
   "uploads": { "1mb": 405, "8mb": 405, "32mb": 405 },
   "verdict": {
    "verdict": "exposed",
-   "meaning": "PHP parses attacker multipart pre-auth: CVE surface is reachable",
-   "reasons": ["multipart POST parsed by PHP -> 405 (client)",
+   "meaning": "PHP evidence on the multipart response and attacker multipart is not rejected: CVE surface is reachable",
+   "reasons": ["multipart POST -> 405 (client)",
+               "PHP evidence on the multipart response",
                "upload-progress field accepted on the same path"],
    "exit_code": 1
   }

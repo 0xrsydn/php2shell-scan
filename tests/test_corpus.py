@@ -55,8 +55,23 @@ class TestVerdicts(unittest.TestCase):
         self.assertEqual(v["exit_code"], 0)
 
     def test_parsed_is_exposed(self):
-        for code, r in ((405, "client"), (302, "ok"), (419, "client")):
-            self.assertEqual(surface_verdict(True, r, code, r)["verdict"], "exposed")
+        self.assertEqual(surface_verdict(True, "ok", 302, "ok",
+                                         multipart_evidence=True)["verdict"], "exposed")
+        self.assertEqual(surface_verdict(True, "client", 405, "client",
+                                         multipart_evidence=True)["verdict"], "exposed")
+        self.assertEqual(surface_verdict(True, "client", 419, "client",
+                                         multipart_evidence=True)["verdict"], "exposed")
+
+    def test_status_without_php_evidence_is_inconclusive(self):
+        # A static nginx returns 405 for POST /; that is not the CVE surface.
+        for code, r in ((405, "client"), (200, "ok"), (302, "ok"), (419, "client")):
+            with self.subTest(code=code):
+                v = surface_verdict(True, r, code, r, multipart_evidence=False)
+                self.assertEqual(v["verdict"], "inconclusive")
+
+    def test_throttle_is_not_exposed(self):
+        v = surface_verdict(True, "throttle", 429, "throttle")
+        self.assertEqual(v["verdict"], "inconclusive")
 
     def test_no_php_is_inconclusive(self):
         self.assertEqual(surface_verdict(False, "ok", 200, "ok")["verdict"], "inconclusive")
